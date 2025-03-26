@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>לתפוס כוכב</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <!-- אם יש גופנים מיוחדים, תוסיף אותם כאן -->
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <!-- ספריות React -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/17.0.2/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/17.0.2/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
+
+    <!-- קבצי קול -->
+    <audio id="starSound" src="sounds/star.mp3" preload="auto"></audio>
+    <audio id="meteorSound" src="sounds/meteor.mp3" preload="auto"></audio>
+    <audio id="tickingSound" src="sounds/ticking.mp3" preload="auto"></audio>
+    <audio id="transitionSound" src="sounds/transition.mp3" preload="auto"></audio>
+    <audio id="backgroundMusic" src="sounds/background.mp3" preload="auto" loop></audio>
+
+    <!-- קוד המשחק -->
+    <script type="text/babel" src="game.js"></script>
+</body>
+
+</html>
