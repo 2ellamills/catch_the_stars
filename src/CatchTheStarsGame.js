@@ -113,7 +113,7 @@ useEffect(() => {
       const id = Date.now().toString() + Math.random().toString();
       const size = 40; // Consistent star size
       const posX = Math.random() * (gameDimensions.width - size);
-      const posY = Math.random() * (gameDimensions.height * 0.7); // Keep stars in upper 70% of screen
+      const posY = 30 + Math.random() * (gameDimensions.height * 0.7 -30 ); // Keep stars in upper 70% of screen
 
       const newStar = { id, posX, posY, size, createdAt: Date.now(), exploding: false };
       setStars(prev => [...prev, newStar]);
@@ -151,8 +151,7 @@ useEffect(() => {
       const id = 'a' + Date.now().toString() + Math.random().toString();
       const size = 40; // אותו גודל כמו כוכבים
       const posX = Math.random() * (gameDimensions.width - size);
-      const posY = Math.random() * (gameDimensions.height * 0.7); // כמו הכוכבים - בחלק העליון של המסך
-      
+      const posY = 30 + Math.random() * (gameDimensions.height * 0.7 - 30); // 10px מתחת לבר העליון
       const newAlien = { id, posX, posY, size, createdAt: Date.now() };
       setMeteors(prev => [...prev, newAlien]);
       
@@ -254,85 +253,93 @@ const handleAlienClick = (alienId) => {
 };
   
   // Opening screen
-  const renderOpeningScreen = () => (
-    <div className="flex flex-col items-center justify-center h-full p-4 relative">
-      <div className="absolute inset-0 overflow-hidden">
-        {[...Array(20)].map((_, i) => (
-          <div 
-            key={i}
-            className="absolute bg-white rounded-full animate-twinkle"
-            style={{
-              width: 2 + Math.random() * 4 + 'px',
-              height: 2 + Math.random() * 4 + 'px',
-              top: Math.random() * 100 + '%',
-              left: Math.random() * 100 + '%',
-              animationDelay: Math.random() * 5 + 's',
-              animationDuration: 3 + Math.random() * 7 + 's'
-            }}
-          />
-        ))}
+  // Opening screen
+const renderOpeningScreen = () => (
+  <div className="flex flex-col items-center justify-center h-full p-4 relative">
+    <div className="absolute inset-0 overflow-hidden">
+      {[...Array(20)].map((_, i) => (
+        <div 
+          key={i}
+          className="absolute bg-white rounded-full animate-twinkle"
+          style={{
+            width: 2 + Math.random() * 4 + 'px',
+            height: 2 + Math.random() * 4 + 'px',
+            top: Math.random() * 100 + '%',
+            left: Math.random() * 100 + '%',
+            animationDelay: Math.random() * 5 + 's',
+            animationDuration: 3 + Math.random() * 7 + 's'
+          }}
+        />
+      ))}
+    </div>
+    
+    {/* הוספת הלוגו כאן */}
+    <div className="mb-6">
+      <img 
+        src="/images/logo.png" 
+        alt="Logo" 
+        className="w-48 h-auto" 
+      />
+    </div>
+    
+    <div className="text-4xl md:text-6xl font-bold mb-8 text-white text-center">
+      לתפוס כוכב
+    </div>
+    
+    <button 
+      className="bg-transparent border-none focus:outline-none transition duration-300 transform hover:scale-110 mb-8 group"
+      onClick={startGame}
+    >
+      <div className="relative">
+        <img 
+          src="/images/star.png" 
+          alt="Star" 
+          width="120" 
+          height="120" 
+          className="animate-pulse group-hover:animate-none"
+        />
+        <div className="absolute inset-0 flex items-center justify-center text-blue-900 font-bold text-xl">
+          שחק
+        </div>
       </div>
-      
-      <div className="text-4xl md:text-6xl font-bold mb-8 text-white text-center">
-        לתפוס כוכב
-      </div>
-      
-     <button 
-  className="bg-transparent border-none focus:outline-none transition duration-300 transform hover:scale-110 mb-8 group"
-  onClick={startGame}
->
-  <div className="relative">
-    <img 
-      src="/images/star.png" 
-      alt="Star" 
-      width="120" 
-      height="120" 
-      className="animate-pulse group-hover:animate-none"
-    />
-    <div className="absolute inset-0 flex items-center justify-center text-blue-900 font-bold text-xl">
-      שחק
+    </button>
+
+    <div className="text-white text-xl text-center max-w-md mb-10">
+      יש לכם 30 שניות לתפוס כמה שיותר כוכבים.
+      <br />
+      היזהרו מהחייזרים!
     </div>
   </div>
-</button>
-{/* הוספת הנחיות למשחק */}
-
-<div className="text-white text-xl text-center max-w-md mb-10">
-
-  יש לכם 30 שניות לתפוס כמה שיותר כוכבים.
-  <br />
-  היזהרו מהחייזרים!
-
-</div>
-    </div>
-  );
+);
 
   // Game screen
   const renderGameScreen = () => (
   <div className="h-full w-full relative" ref={gameAreaRef}>
       {/* Top bar */}
-      <div className="flex justify-between items-center p-2 bg-blue-900 bg-opacity-60">
-        {/* Lives */}
-        <div className="flex">
-          {[...Array(lives)].map((_, i) => (
-            <svg key={i} width="24" height="24" viewBox="0 0 24 24" className="text-red-500 mx-1">
-              <path 
-                fill="currentColor" 
-                d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" 
-              />
-            </svg>
-          ))}
-        </div>
-        
-        {/* Score */}
-        <div className="text-white font-bold text-lg">
-          Score: {score}
-        </div>
-        
-        {/* Timer */}
-        <div className={`text-lg font-bold px-2 py-1 rounded ${timeLeft <= 10 ? 'text-red-500 animate-flash bg-white bg-opacity-20' : 'text-white'}`}>
-          {timeLeft}s
-        </div>
-      </div>
+      {/* Top bar */}
+<div className="flex justify-between items-center p-2" style={{ backgroundColor: '#58b2b0' }}>
+  {/* Lives */}
+  <div className="flex">
+    {[...Array(lives)].map((_, i) => (
+      <svg key={i} width="24" height="24" viewBox="0 0 24 24" className="mx-1" style={{ color: "#c2185b" }}>
+        <path 
+          fill="currentColor" 
+          d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" 
+        />
+      </svg>
+    ))}
+  </div>
+  
+  {/* Score */}
+  <div className="text-gray-800 font-bold text-lg">
+    ניקוד: {score}
+  </div>
+  
+  {/* Timer */}
+  <div className={`text-lg font-bold px-2 py-1 rounded ${timeLeft <= 10 ? 'text-red-500 animate-flash bg-white bg-opacity-20' : 'text-gray-800'}`}>
+    {timeLeft}s
+  </div>
+</div>
       {/* Game area */}
       <div className="absolute inset-0 pt-10 overflow-hidden">
         {/* Stars */}
@@ -403,72 +410,141 @@ const handleAlienClick = (alienId) => {
   );
 
   // End screen
-  const renderEndScreen = () => (
-    <div className="flex flex-col items-center justify-center h-full p-4 relative">
-      <div className="absolute inset-0 overflow-hidden">
-        {[...Array(30)].map((_, i) => (
+  // End screen
+const renderEndScreen = () => (
+  <div className="flex flex-col items-center justify-center h-full p-4 relative">
+    <div className="absolute inset-0 overflow-hidden">
+      {[...Array(30)].map((_, i) => (
+        <div 
+          key={i}
+          className="absolute bg-white rounded-full animate-twinkle"
+          style={{
+            width: 2 + Math.random() * 4 + 'px',
+            height: 2 + Math.random() * 4 + 'px',
+            top: Math.random() * 100 + '%',
+            left: Math.random() * 100 + '%',
+            animationDelay: Math.random() * 5 + 's',
+            animationDuration: 3 + Math.random() * 7 + 's'
+          }}
+        />
+      ))}
+    </div>
+    
+    {/* הוספת הלוגו כאן */}
+    <div className="mb-6">
+      <img 
+        src="/images/logo.png" 
+        alt="Logo" 
+        className="w-48 h-auto" 
+      />
+    </div>
+    
+    <div className="text-4xl md:text-5xl font-bold mb-6 text-white text-center">
+      אתם קבוצת הכוכבים שלנו!
+    </div>
+    
+    <div className="text-2xl md:text-3xl font-bold mb-8 text-yellow-300">
+      ניקוד סופי: {score}
+    </div>
+    
+    <div className="flex space-x-4 mb-8">
+      <button 
+        className="bg-yellow-400 hover:bg-yellow-300 text-blue-900 font-bold py-3 px-6 rounded-full transition duration-300 transform hover:scale-105"
+        onClick={startGame}
+      >
+        לשחק שוב
+      </button>
+      
+      <button 
+        className="bg-blue-500 hover:bg-blue-400 text-white font-bold py-3 px-6 rounded-full transition duration-300 transform hover:scale-105"
+        onClick={() => {
+          // Share functionality would go here
+          alert('Sharing score: ' + score);
+        }}
+      >
+        Share
+      </button>
+    </div>
+    
+    {/* קרדיטים */}
+    <div className="relative h-72 overflow-hidden"
+      style={{ perspective: "1000px" }}
+    >
+      {/* ... הקוד הקיים של הקרדיטים נשאר כפי שהוא ... */}
+  {/* קרדיטים בסגנון מלחמת הכוכבים */}
+<div 
+  className="relative h-96 w-full overflow-hidden mt-4"
+  style={{ perspective: "1000px" }}
+>
+  {/* קרדיטים בסגנון פשוט יותר עם כוכבים */}
+{/* קרדיטים בסגנון גלקסיה */}
+<div className="text-center mt-8 space-y-4 max-h-80 overflow-y-auto px-4 credits-container">
+  <h3 className="text-yellow-400 font-bold text-2xl mb-6 sticky top-0 bg-blue-900 bg-opacity-80 py-2 rounded-t-lg z-10">
+    רצינו להגיד לכם ולכן תודה על כל ההשקעה
+  </h3>
+  
+  {[
+    { name: "ליאור בראשי", desc: "הכוכב שבאה להאיר את הדרך" },
+    { name: "אורי צ'יבוטרו", desc: "הכוכב שתמיד אפשר למצוא בשמיים" },
+    { name: "אלעד בזילובסקי", desc: "הכוכב שתמיד מעניק תקווה" },
+    { name: "טליה עזרן", desc: "כוכב הבוקר המעניקה בהירות ואופטימיות" },
+    { name: "עינת בר-עם שנבל", desc: "סופר נובה של יצירתיות" },
+    { name: "יאיר גולדברג", desc: "הכוכב שזוהר גם בשמי היום וגם בשמי הלילה" },
+    { name: "יקיר אבוטבול", desc: "כוכב הערב המעניק סיכום מושלם לכל יום מאתגר" },
+    { name: "עמית פשה", desc: "כוכב שביט המשאיר חותם בכל מקום" },
+    { name: "ידידיה גרין", desc: "הכוכב שמנווט דרך סופות קוסמיות" },
+    { name: "אופיר לוין", desc: "אבק הכוכבים שכדאי לפזר בכל פרויקט" },
+    { name: "מיכל מייטלס", desc: "כוכב מאיר עם אנרגיות בלתי נדלות" }
+  ].map((credit, index) => (
+    <div 
+      key={index} 
+      className="credit-item relative p-5 rounded-lg transform transition-all duration-500"
+      style={{ 
+        background: "radial-gradient(circle, rgba(25,113,255,0.3) 0%, rgba(10,20,90,0.1) 100%)",
+        animationDelay: `${index * 0.2}s` 
+      }}
+    >
+      {/* כוכבים מסביב */}
+      <div className="absolute -z-10">
+        {[...Array(3)].map((_, i) => (
           <div 
             key={i}
-            className="absolute bg-white rounded-full animate-twinkle"
+            className="absolute rounded-full bg-white animate-twinkle"
             style={{
-              width: 2 + Math.random() * 4 + 'px',
-              height: 2 + Math.random() * 4 + 'px',
+              width: 2 + Math.random() * 3 + 'px',
+              height: 2 + Math.random() * 3 + 'px',
               top: Math.random() * 100 + '%',
               left: Math.random() * 100 + '%',
-              animationDelay: Math.random() * 5 + 's',
-              animationDuration: 3 + Math.random() * 7 + 's'
+              opacity: 0.5 + Math.random() * 0.5,
+              animationDuration: 1 + Math.random() * 3 + 's',
+              animationDelay: Math.random() + 's'
             }}
           />
         ))}
       </div>
       
-      <div className="text-4xl md:text-5xl font-bold mb-6 text-white text-center">
-        אתם קבוצת הכוכבים שלנו!
+      <div className="flex items-center justify-center mb-2">
+        <img src="/images/star.png" alt="Star" className="w-6 h-6 mr-3 animate-pulse" />
+        <span className="text-yellow-300 font-bold text-xl">{credit.name}</span>
       </div>
-      
-      <div className="text-2xl md:text-3xl font-bold mb-8 text-yellow-300">
-        ניקוד סופי: {score}
-      </div>
-      
-      <div className="flex space-x-4 mb-8">
-        <button 
-          className="bg-yellow-400 hover:bg-yellow-300 text-blue-900 font-bold py-3 px-6 rounded-full transition duration-300 transform hover:scale-105"
-          onClick={startGame}
-        >
-          לשחק שוב
-        </button>
-        
-        <button 
-          className="bg-blue-500 hover:bg-blue-400 text-white font-bold py-3 px-6 rounded-full transition duration-300 transform hover:scale-105"
-          onClick={() => {
-            // Share functionality would go here
-            alert('Sharing score: ' + score);
-          }}
-        >
-          Share
-        </button>
-      </div>
-      
-      <div className="text-white text-center mt-8 opacity-70 text-sm">
-        <h3 className="text-lg mb-2">רצינו להגיד לכם ולכן תודה על כל ההשקעה</h3>
-        <p>ליאור בראשי : הכוכב שבאה להאיר את הדרך</p>
-        <p>אורי צ'יבוטרו : הכוכב שתמיד אפשר למצוא בשמיים</p>
-        <p>אלעד בזילובסקי : הכוכב שתמיד מעניק תקווה</p>
-        <p>טליה עזרן : כוכב הבוקר המעניקה בהירות ואופטימיות</p>
-        <p>עינת בר-עם שנבל : סופר נובה של יצירתיות</p>
-        <p>יאיר גולדברג : הכוכב שזוהר גם בשמי היום וגם בשמי הלילה</p>
-        <p>יקיר אבוטבול : כוכב הערב המעניק סיכום מושלם לכל יום מאתגר</p>
-        <p>עמית פשה : כוכב שביט המשאיר חותם בכל מקום</p>
-        <p>ידידיה גרין : הכוכב שמנווט דרך סופות קוסמיות</p>
-        <p>אופיר לוין : אבק הכוכבים שכדאי לפזר בכל פרויקט</p>
-        <p>מיכל מייטלס : כוכב מאיר עם אנרגיות בלתי נדלות  </p>
-      </div>
+      <p className="text-blue-200 italic">{credit.desc}</p>
+    </div>
+  ))}
+</div>
+</div>
+</div>
     </div>
   );
   
   // Main render based on game state
   return (
-  <div className="h-screen w-full bg-gradient-to-b from-indigo-900 to-purple-900 overflow-hidden font-rubik" style={{ fontFamily: "'Rubik', sans-serif" }}>
+  <div 
+  className="h-screen w-full overflow-hidden font-rubik" 
+  style={{ 
+    fontFamily: "'Rubik', sans-serif",
+    background: "linear-gradient(180deg, rgba(50,7,82,1) 0%, rgba(81,28,134,1) 75%, rgba(91,33,151,1) 100%)" 
+  }}
+>
       <div className="h-full w-full relative">
         {gameState === 'opening' && renderOpeningScreen()}
         {gameState === 'playing' && renderGameScreen()}
