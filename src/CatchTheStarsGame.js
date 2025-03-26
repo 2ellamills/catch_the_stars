@@ -115,7 +115,7 @@ useEffect(() => {
       const posX = Math.random() * (gameDimensions.width - size);
       const posY = Math.random() * (gameDimensions.height * 0.7); // Keep stars in upper 70% of screen
 
-      const newStar = { id, posX, posY, size, createdAt: Date.now() };
+      const newStar = { id, posX, posY, size, createdAt: Date.now(), exploding: false };
       setStars(prev => [...prev, newStar]);
 
       // Remove star after 2-3 seconds if not caught
@@ -136,60 +136,49 @@ useEffect(() => {
     return () => clearInterval(interval);
   }, [gameState, gameDimensions, starInterval]);
 
-  // Meteor generation (starts after 5 seconds)
-  useEffect(() => {
-    if (gameState !== 'playing') return;
+  // alien generation (starts after 5 seconds)
+  // חייזרים במקום מטאורים (שינוי לוגיקת היצירה והופעה)
+useEffect(() => {
+  if (gameState !== 'playing') return;
 
-    let meteorTimer;
-    
-    // Start creating meteors after 5 seconds
-    const initialDelay = setTimeout(() => {
-      const createMeteor = () => {
-        if (gameState !== 'playing') return;
-        
-        const id = 'm' + Date.now().toString() + Math.random().toString();
-        const size = 50; // Consistent meteor size
-        const posX = Math.random() * (gameDimensions.width - size);
-        const posY = -size; // Start from top of screen
-        const speed = 3 + Math.random() * 2; // Faster than stars
-        
-        const newMeteor = { id, posX, posY, size, speed };
-        setMeteors(prev => [...prev, newMeteor]);
-        
-        // Play meteor sound
-        if (meteorSoundRef.current) {
-          const sound = meteorSoundRef.current.cloneNode();
-          sound.volume = 0.3;
-          sound.play().catch(() => {});
-        }
-      };
-
-      // Create meteors at regular intervals
-      meteorTimer = setInterval(createMeteor, 2000);
-    }, 5000);
-
-    // Move meteors
-    const animationFrame = setInterval(() => {
-      setMeteors(prev => 
-        prev.map(meteor => {
-          const newPosY = meteor.posY + meteor.speed;
-          
-          // Remove meteor if it goes off screen
-          if (newPosY > gameDimensions.height) {
-            return null;
-          }
-          
-          return { ...meteor, posY: newPosY };
-        }).filter(Boolean)
-      );
-    }, 16); // ~60fps
-
-    return () => {
-      clearTimeout(initialDelay);
-      clearInterval(meteorTimer);
-      clearInterval(animationFrame);
+  let alienTimer;
+  
+  // התחל ליצור חייזרים אחרי 5 שניות
+  const initialDelay = setTimeout(() => {
+    const createAlien = () => {
+      if (gameState !== 'playing') return;
+      
+      const id = 'a' + Date.now().toString() + Math.random().toString();
+      const size = 40; // אותו גודל כמו כוכבים
+      const posX = Math.random() * (gameDimensions.width - size);
+      const posY = Math.random() * (gameDimensions.height * 0.7); // כמו הכוכבים - בחלק העליון של המסך
+      
+      const newAlien = { id, posX, posY, size, createdAt: Date.now() };
+      setMeteors(prev => [...prev, newAlien]);
+      
+      // השמע צליל של מטאור/חייזר
+      if (meteorSoundRef.current) {
+        const sound = meteorSoundRef.current.cloneNode();
+        sound.volume = 0.3;
+        sound.play().catch(() => {});
+      }
+      
+      // הסר את החייזר אחרי 1.5-3 שניות אם לא לחצו עליו
+      const lifespan = 1500 + Math.random() * 1500;
+      setTimeout(() => {
+        setMeteors(prev => prev.filter(alien => alien.id !== id));
+      }, lifespan);
     };
-  }, [gameState, gameDimensions]);
+
+    // צור חייזרים במרווחי זמן קבועים
+    alienTimer = setInterval(createAlien, 2000);
+  }, 5000);
+
+  return () => {
+    clearTimeout(initialDelay);
+    clearInterval(alienTimer);
+  };
+}, [gameState, gameDimensions]);
 
   // Start the game
   const startGame = () => {
@@ -222,39 +211,47 @@ useEffect(() => {
   };
 
   // Handle star catch
-  const handleStarClick = (starId) => {
-    // Play star sound
-    if (starSoundRef.current) {
-      const sound = starSoundRef.current.cloneNode();
-      sound.volume = 0.5;
-      sound.play().catch(() => {});
-    }
-    
-    // Update score and remove the star
-    setScore(prev => prev + 10);
+// החלף את הפונקציה עם הגרסה הזו
+const handleStarClick = (starId) => {
+  // Play star sound
+  if (starSoundRef.current) {
+    const sound = starSoundRef.current.cloneNode();
+    sound.volume = 0.5;
+    sound.play().catch(() => {});
+  }
+  
+  // סימון הכוכב כ"מתפוצץ" במקום למחוק אותו מיד
+  setStars(prev => prev.map(star => 
+    star.id === starId ? {...star, exploding: true} : star
+  ));
+  
+  // מחיקת הכוכב אחרי אנימציית הפיצוץ
+  setTimeout(() => {
     setStars(prev => prev.filter(star => star.id !== starId));
-  };
+    setScore(prev => prev + 10);
+  }, 300); // משך זמן האנימציה במילישניות
+};
 
   // Handle meteor click
-  const handleMeteorClick = (meteorId) => {
-    // Remove life and the meteor
-    setLives(prev => {
-      const newLives = prev - 1;
-      if (newLives <= 0) {
-        setTimeout(endGame, 500); // Short delay to show the life lost
-      }
-      return newLives;
-    });
-    
-    setMeteors(prev => prev.filter(meteor => meteor.id !== meteorId));
-    
-    // Visual feedback for hitting a meteor
-    // Screen shake is handled via CSS class
-    document.body.classList.add('shake');
-    setTimeout(() => {
-      document.body.classList.remove('shake');
-    }, 300);
-  };
+  // טיפול בלחיצה על חייזר
+const handleAlienClick = (alienId) => {
+  // הסר חיים ואת החייזר
+  setLives(prev => {
+    const newLives = prev - 1;
+    if (newLives <= 0) {
+      setTimeout(endGame, 500); // השהייה קצרה כדי להראות את אובדן החיים
+    }
+    return newLives;
+  });
+  
+  setMeteors(prev => prev.filter(alien => alien.id !== alienId));
+  
+  // משוב ויזואלי לפגיעה בחייזר
+  document.body.classList.add('shake');
+  setTimeout(() => {
+    document.body.classList.remove('shake');
+  }, 300);
+};
   
   // Opening screen
   const renderOpeningScreen = () => (
@@ -280,25 +277,32 @@ useEffect(() => {
         לתפוס כוכב
       </div>
       
-      <button 
-  className="bg-transparent border-none focus:outline-none transition duration-300 transform hover:scale-110 mb-8"
+     <button 
+  className="bg-transparent border-none focus:outline-none transition duration-300 transform hover:scale-110 mb-8 group"
   onClick={startGame}
 >
   <div className="relative">
-    <svg width="120" height="120" viewBox="0 0 120 120" className="transform-origin-center">
-      <polygon
-        points="60,10 74,45 112,45 82,69 94,105 60,85 26,105 38,69 8,45 46,45"
-        fill="#FFD700"
-        stroke="#FFF"
-        strokeWidth="1"
-        className="animate-pulse"
-      />
-    </svg>
+    <img 
+      src="/images/star.png" 
+      alt="Star" 
+      width="120" 
+      height="120" 
+      className="animate-pulse group-hover:animate-none"
+    />
     <div className="absolute inset-0 flex items-center justify-center text-blue-900 font-bold text-xl">
       שחק
     </div>
   </div>
 </button>
+{/* הוספת הנחיות למשחק */}
+
+<div className="text-white text-xl text-center max-w-md mb-10">
+
+  יש לכם 30 שניות לתפוס כמה שיותר כוכבים.
+  <br />
+  היזהרו מהחייזרים!
+
+</div>
     </div>
   );
 
@@ -332,63 +336,52 @@ useEffect(() => {
       {/* Game area */}
       <div className="absolute inset-0 pt-10 overflow-hidden">
         {/* Stars */}
-        {stars.map(star => (
-          <div
-            key={star.id}
-            className="absolute cursor-pointer transform hover:scale-110 transition-transform"
-            style={{
-              left: star.posX + 'px',
-              top: star.posY + 'px',
-              width: star.size + 'px',
-              height: star.size + 'px',
-            }}
-            onClick={() => handleStarClick(star.id)}
-          >
-            <svg viewBox="0 0 100 100">
-              <polygon
-                points="50,5 63,38 98,38 70,60 80,95 50,75 20,95 30,60 2,38 37,38"
-                fill="#FFD700"
-                stroke="#FFF"
-                strokeWidth="1"
-              />
-            </svg>
-          </div>
-        ))}
+       {/* Stars */}
+{/* Stars */}
+{stars.map(star => (
+  <div
+    key={star.id}
+    className={`absolute cursor-pointer transition-all duration-300 ${star.exploding ? 'scale-150 opacity-0' : 'transform hover:scale-110'}`}
+    style={{
+      left: star.posX + 'px',
+      top: star.posY + 'px',
+      width: star.size + 'px',
+      height: star.size + 'px',
+    }}
+    onClick={() => !star.exploding && handleStarClick(star.id)}
+  >
+    <img 
+      src="/images/star.png" 
+      alt="Star" 
+      className={`w-full h-full ${star.exploding ? "animate-ping" : ""}`}
+      style={{
+        filter: star.exploding ? "brightness(1.5)" : "none"
+      }}
+    />
+  </div>
+))}
         
         {/* Meteors */}
-        {meteors.map(meteor => (
-          <div
-            key={meteor.id}
-            className="absolute cursor-pointer"
-            style={{
-              left: meteor.posX + 'px',
-              top: meteor.posY + 'px',
-              width: meteor.size + 'px',
-              height: meteor.size + 'px',
-            }}
-            onClick={() => handleMeteorClick(meteor.id)}
-          >
-            <svg viewBox="0 0 100 100">
-              <defs>
-                <radialGradient id="meteorGradient" cx="30%" cy="30%" r="70%" fx="30%" fy="30%">
-                  <stop offset="0%" stopColor="#ff6b35" />
-                  <stop offset="100%" stopColor="#6e4555" />
-                </radialGradient>
-              </defs>
-              <path
-                d="M50,10 Q70,20 80,40 Q90,65 75,80 Q55,95 40,90 Q20,80 15,60 Q15,35 30,20 Q40,10 50,10 Z"
-                fill="url(#meteorGradient)"
-                stroke="#333"
-                strokeWidth="2"
-              />
-              <path
-                d="M30,90 Q20,100 10,105 L10,115 Q25,110 35,95 Z"
-                fill="#ff6b35"
-                opacity="0.7"
-              />
-            </svg>
-          </div>
-        ))}
+        {/* חייזרים (במקום מטאורים) */}
+{meteors.map(alien => (
+  <div
+    key={alien.id}
+    className="absolute cursor-pointer transform hover:scale-110 transition-transform"
+    style={{
+      left: alien.posX + 'px',
+      top: alien.posY + 'px',
+      width: alien.size + 'px',
+      height: alien.size + 'px',
+    }}
+    onClick={() => handleAlienClick(alien.id)}
+  >
+    <img 
+      src="/images/alien.png" 
+      alt="Alien" 
+      className="w-full h-full"
+    />
+  </div>
+))}
         
 {/* Clouds at bottom */}
 <div className="absolute bottom-0 left-0 right-0 h-24 overflow-visible">
@@ -430,7 +423,7 @@ useEffect(() => {
       </div>
       
       <div className="text-4xl md:text-5xl font-bold mb-6 text-white text-center">
-        אתם הכוכבים שלנו!
+        אתם קבוצת הכוכבים שלנו!
       </div>
       
       <div className="text-2xl md:text-3xl font-bold mb-8 text-yellow-300">
@@ -457,17 +450,20 @@ useEffect(() => {
       </div>
       
       <div className="text-white text-center mt-8 opacity-70 text-sm">
-        <h3 className="text-lg mb-2">Credits</h3>
-        <p>Game Design: Your Team</p>
-        <p>Development: Your Developers</p>
-        <p>Artwork: Your Artists</p>
+        <h3 className="text-lg mb-2">רצינו להגיד לכם ולכן תודה על כל ההשקעה</h3>
+        <p>ליאור בראשי : הכוכבת שבאה להאיר את הדרך</p>
+        <p>אורי צ'יבוטרו : הכוכב שתמיד אפשר למצוא בשמיים</p>
+        <p>אלעד בזילובסקי : הכוכב שתמיד מעניק תקווה</p>
+        <p>טליה עזרן : כוכב הבוקר המעניקה בהירות ואופטימיות</p>
+        <p>עינת בר-עם שנבל : סופר נובה של יצירתיות</p>
+
       </div>
     </div>
   );
   
   // Main render based on game state
   return (
-    <div className="h-screen w-full bg-gradient-to-b from-indigo-900 to-purple-900 overflow-hidden font-sans">
+  <div className="h-screen w-full bg-gradient-to-b from-indigo-900 to-purple-900 overflow-hidden font-rubik" style={{ fontFamily: "'Rubik', sans-serif" }}>
       <div className="h-full w-full relative">
         {gameState === 'opening' && renderOpeningScreen()}
         {gameState === 'playing' && renderGameScreen()}
