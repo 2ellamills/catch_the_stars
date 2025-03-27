@@ -110,7 +110,7 @@ useEffect(() => {
   if (gameState !== 'end') return;
   
   const interval = setInterval(() => {
-    setCurrentCredit((prev) => (prev === 11 ? 0 : prev + 1)); // 10 זה מספר הקרדיטים פחות 1
+    setCurrentCredit((prev) => (prev === 12 ? 0 : prev + 1)); // 10 זה מספר הקרדיטים פחות 1
   }, 3000); // Change every 3 seconds
   
   return () => clearInterval(interval);
@@ -439,6 +439,7 @@ const renderOpeningScreen = () => (
 const renderEndScreen = () => {
   const credits = [
     { name: "ליאור בראשי", desc: "הכוכב שבאה להאיר את הדרך" },
+    { name: "אלון שורץ", desc: "כוכב הצפון" },
     { name: "אורי צ'יבוטרו", desc: "הכוכב שתמיד אפשר למצוא בשמיים" },
     { name: "אלעד בזילובסקי", desc: "הכוכב שתמיד מעניק תקווה" },
     { name: "רווית, תמר ולאל", desc: "הכוכבות שעוזרות לנו לנווט בסופה הקוסמית" },
