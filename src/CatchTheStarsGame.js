@@ -9,7 +9,8 @@ const CatchTheStarsGame = () => {
   const [stars, setStars] = useState([]);
   const [meteors, setMeteors] = useState([]);
   const [starInterval, setStarInterval] = useState(1000); // Initial interval for star appearance (ms)
-  
+  const [currentCredit, setCurrentCredit] = useState(0);
+
   // Audio elements
   const starSoundRef = useRef(null);
   const meteorSoundRef = useRef(null);
@@ -104,6 +105,16 @@ useEffect(() => {
       if (backgroundMusicRef.current) backgroundMusicRef.current.pause();
     };
   }, [gameState]);
+// Auto advance carousel when game ends
+useEffect(() => {
+  if (gameState !== 'end') return;
+  
+  const interval = setInterval(() => {
+    setCurrentCredit((prev) => (prev === 11 ? 0 : prev + 1)); // 10 זה מספר הקרדיטים פחות 1
+  }, 3000); // Change every 3 seconds
+  
+  return () => clearInterval(interval);
+}, [gameState]);
 
   // Star generation
   useEffect(() => {
@@ -111,9 +122,9 @@ useEffect(() => {
 
     const createStar = () => {
       const id = Date.now().toString() + Math.random().toString();
-      const size = 40; // Consistent star size
+      const size = 50; // Consistent star size
       const posX = Math.random() * (gameDimensions.width - size);
-      const posY = 30 + Math.random() * (gameDimensions.height * 0.7 -30 ); // Keep stars in upper 70% of screen
+      const posY = 50 + Math.random() * (gameDimensions.height * 0.7 -50 ); // Keep stars in upper 70% of screen
 
       const newStar = { id, posX, posY, size, createdAt: Date.now(), exploding: false };
       setStars(prev => [...prev, newStar]);
@@ -149,9 +160,9 @@ useEffect(() => {
       if (gameState !== 'playing') return;
       
       const id = 'a' + Date.now().toString() + Math.random().toString();
-      const size = 40; // אותו גודל כמו כוכבים
+      const size = 50; // אותו גודל כמו כוכבים
       const posX = Math.random() * (gameDimensions.width - size);
-      const posY = 30 + Math.random() * (gameDimensions.height * 0.7 - 30); // 10px מתחת לבר העליון
+      const posY = 50 + Math.random() * (gameDimensions.height * 0.7 - 50); // 10px מתחת לבר העליון
       const newAlien = { id, posX, posY, size, createdAt: Date.now() };
       setMeteors(prev => [...prev, newAlien]);
       
@@ -171,7 +182,7 @@ useEffect(() => {
 
     // צור חייזרים במרווחי זמן קבועים
     alienTimer = setInterval(createAlien, 2000);
-  }, 5000);
+  }, 4000);
 
   return () => {
     clearTimeout(initialDelay);
@@ -188,7 +199,7 @@ useEffect(() => {
     setGameState('playing');
     setLives(3);
     setScore(0);
-    setTimeLeft(30);
+    setTimeLeft(25);
     setStars([]);
     setMeteors([]);
     setStarInterval(1000);
@@ -208,7 +219,21 @@ useEffect(() => {
     
     setGameState('end');
   };
-
+// Handle share button click
+  const handleShare = () => {
+  if (navigator.share) {
+    // Web Share API - עובד בדפדפנים מודרניים ובמובייל
+    navigator.share({
+      title: 'תוצאה במשחק לתפוס כוכב',
+      text: `הצלחתי לתפוס ${score} כוכבים במשחק!`,
+      url: window.location.href
+    })
+    .catch(error => console.log('Error sharing:', error));
+  } else {
+    // פתרון חלופי למקרה שה-API לא נתמך
+    alert(`הניקוד שלך: ${score}! שתף זאת עם חברים!`);
+  }
+};
   // Handle star catch
 // החלף את הפונקציה עם הגרסה הזו
 const handleStarClick = (starId) => {
@@ -410,132 +435,141 @@ const renderOpeningScreen = () => (
   );
 
   // End screen
-  // End screen
-const renderEndScreen = () => (
-  <div className="flex flex-col items-center justify-center h-full p-4 relative">
-    <div className="absolute inset-0 overflow-hidden">
-      {[...Array(30)].map((_, i) => (
-        <div 
-          key={i}
-          className="absolute bg-white rounded-full animate-twinkle"
-          style={{
-            width: 2 + Math.random() * 4 + 'px',
-            height: 2 + Math.random() * 4 + 'px',
-            top: Math.random() * 100 + '%',
-            left: Math.random() * 100 + '%',
-            animationDelay: Math.random() * 5 + 's',
-            animationDuration: 3 + Math.random() * 7 + 's'
-          }}
-        />
-      ))}
-    </div>
-    
-    {/* הוספת הלוגו כאן */}
-    <div className="mb-6">
-      <img 
-        src="/images/logo.png" 
-        alt="Logo" 
-        className="w-48 h-auto" 
-      />
-    </div>
-    
-    <div className="text-4xl md:text-5xl font-bold mb-6 text-white text-center">
-      אתם קבוצת הכוכבים שלנו!
-    </div>
-    
-    <div className="text-2xl md:text-3xl font-bold mb-8 text-yellow-300">
-      ניקוד סופי: {score}
-    </div>
-    
-    <div className="flex space-x-4 mb-8">
-      <button 
-        className="bg-yellow-400 hover:bg-yellow-300 text-blue-900 font-bold py-3 px-6 rounded-full transition duration-300 transform hover:scale-105"
-        onClick={startGame}
-      >
-        לשחק שוב
-      </button>
-      
-      <button 
-        className="bg-blue-500 hover:bg-blue-400 text-white font-bold py-3 px-6 rounded-full transition duration-300 transform hover:scale-105"
-        onClick={() => {
-          // Share functionality would go here
-          alert('Sharing score: ' + score);
-        }}
-      >
-        Share
-      </button>
-    </div>
-    
-    {/* קרדיטים */}
-    <div className="relative h-72 overflow-hidden"
-      style={{ perspective: "1000px" }}
-    >
-      {/* ... הקוד הקיים של הקרדיטים נשאר כפי שהוא ... */}
-  {/* קרדיטים בסגנון מלחמת הכוכבים */}
-<div 
-  className="relative h-96 w-full overflow-hidden mt-4"
-  style={{ perspective: "1000px" }}
->
-  {/* קרדיטים בסגנון פשוט יותר עם כוכבים */}
-{/* קרדיטים בסגנון גלקסיה */}
-<div className="text-center mt-8 space-y-4 max-h-80 overflow-y-auto px-4 credits-container">
-  <h3 className="text-yellow-400 font-bold text-2xl mb-6 sticky top-0 bg-blue-900 bg-opacity-80 py-2 rounded-t-lg z-10">
-    רצינו להגיד לכם ולכן תודה על כל ההשקעה
-  </h3>
-  
-  {[
+ // End screen
+const renderEndScreen = () => {
+  const credits = [
     { name: "ליאור בראשי", desc: "הכוכב שבאה להאיר את הדרך" },
     { name: "אורי צ'יבוטרו", desc: "הכוכב שתמיד אפשר למצוא בשמיים" },
     { name: "אלעד בזילובסקי", desc: "הכוכב שתמיד מעניק תקווה" },
+    { name: "רווית, תמר ולאל", desc: "הכוכבות שעוזרות לנו לנווט בסופה הקוסמית" },
     { name: "טליה עזרן", desc: "כוכב הבוקר המעניקה בהירות ואופטימיות" },
     { name: "עינת בר-עם שנבל", desc: "סופר נובה של יצירתיות" },
     { name: "יאיר גולדברג", desc: "הכוכב שזוהר גם בשמי היום וגם בשמי הלילה" },
+    { name: "שלי, הילה, טל, עדי, ענבל ומאדי", desc: "הסטודיו הנוצץ ביותר בגלקסיה"},
     { name: "יקיר אבוטבול", desc: "כוכב הערב המעניק סיכום מושלם לכל יום מאתגר" },
     { name: "עמית פשה", desc: "כוכב שביט המשאיר חותם בכל מקום" },
-    { name: "ידידיה גרין", desc: "הכוכב שמנווט דרך סופות קוסמיות" },
-    { name: "אופיר לוין", desc: "אבק הכוכבים שכדאי לפזר בכל פרויקט" },
-    { name: "מיכל מייטלס", desc: "כוכב מאיר עם אנרגיות בלתי נדלות" }
-  ].map((credit, index) => (
-    <div 
-      key={index} 
-      className="credit-item relative p-5 rounded-lg transform transition-all duration-500"
-      style={{ 
-        background: "radial-gradient(circle, rgba(25,113,255,0.3) 0%, rgba(10,20,90,0.1) 100%)",
-        animationDelay: `${index * 0.2}s` 
-      }}
-    >
-      {/* כוכבים מסביב */}
-      <div className="absolute -z-10">
-        {[...Array(3)].map((_, i) => (
+    { name: "ידידיה, אופיר ומיכל", desc: "אבק הכוכבים שכדאי לפזר בכל פרויקט" },
+    { name: "טלי אינדה ואחינועם", desc: "הקונסטלציה של המזלות שיוצרות את החיבור בין הכוכבים"},
+  ];
+
+  // Handle carousel navigation
+  const nextCredit = () => {
+    setCurrentCredit((prev) => (prev === credits.length - 1 ? 0 : prev + 1));
+  };
+
+  const prevCredit = () => {
+    setCurrentCredit((prev) => (prev === 0 ? credits.length - 1 : prev - 1));
+  };
+
+  return (
+    <div className="flex flex-col items-center justify-center h-full p-4 relative">
+      <div className="absolute inset-0 overflow-hidden">
+        {[...Array(30)].map((_, i) => (
           <div 
             key={i}
-            className="absolute rounded-full bg-white animate-twinkle"
+            className="absolute bg-white rounded-full animate-twinkle"
             style={{
-              width: 2 + Math.random() * 3 + 'px',
-              height: 2 + Math.random() * 3 + 'px',
+              width: 2 + Math.random() * 4 + 'px',
+              height: 2 + Math.random() * 4 + 'px',
               top: Math.random() * 100 + '%',
               left: Math.random() * 100 + '%',
-              opacity: 0.5 + Math.random() * 0.5,
-              animationDuration: 1 + Math.random() * 3 + 's',
-              animationDelay: Math.random() + 's'
+              animationDelay: Math.random() * 5 + 's',
+              animationDuration: 3 + Math.random() * 7 + 's'
             }}
           />
         ))}
       </div>
       
-      <div className="flex items-center justify-center mb-2">
-        <img src="/images/star.png" alt="Star" className="w-6 h-6 mr-3 animate-pulse" />
-        <span className="text-yellow-300 font-bold text-xl">{credit.name}</span>
+      {/* לוגו */}
+      <div className="mb-4">
+        <img 
+          src="/images/logo.png" 
+          alt="Logo" 
+          className="w-48 h-auto" 
+        />
       </div>
-      <p className="text-blue-200 italic">{credit.desc}</p>
-    </div>
-  ))}
-</div>
-</div>
+      
+      {/* כותרת */}
+      <div className="text-4xl md:text-5xl font-bold mb-6 text-white text-center">
+        אתם קבוצת הכוכבים שלנו!
+      </div>
+      
+      {/* קרוסלת קרדיטים */}
+      <div className="w-full max-w-md relative mb-8">
+        <div className="text-center p-6 rounded-lg min-h-48 flex flex-col items-center justify-center"
+          style={{ 
+            background: "radial-gradient(circle, rgba(25,113,255,0.3) 0%, rgba(10,20,90,0.1) 100%)",
+          }}
+        >
+          <div className="credit-item">
+            <div className="flex items-center justify-center mb-3">
+              <img src="/images/star.png" alt="Star" className="w-8 h-8 ml-3 animate-pulse" />
+              <span className="text-yellow-300 font-bold text-2xl">{credits[currentCredit].name}</span>
+            </div>
+            <p className="text-blue-200 italic text-lg">{credits[currentCredit].desc}</p>
+          </div>
+          
+          {/* כפתורי ניווט */}
+          <div className="flex justify-between w-full absolute top-1/2 transform -translate-y-1/2">
+            <button 
+              onClick={prevCredit} 
+              className="bg-blue-900 bg-opacity-50 rounded-full p-2 text-white hover:bg-opacity-70 focus:outline-none transform -translate-x-4"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d= "M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            <button 
+              onClick={nextCredit} 
+              className="bg-blue-900 bg-opacity-50 rounded-full p-2 text-white hover:bg-opacity-70 focus:outline-none transform translate-x-4"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          </div>
+          
+          {/* אינדיקטור */}
+          <div className="flex justify-center mt-4 space-x-1">
+            {credits.map((_, index) => (
+              <div 
+                key={index} 
+                className={`h-2 w-2 rounded-full ${index === currentCredit ? 'bg-yellow-300' : 'bg-blue-200 bg-opacity-40'}`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+      
+      {/* ניקוד וכפתורים */}
+      <div className="text-2xl md:text-3xl font-bold mb-6 text-yellow-300">
+        ניקוד סופי: {score}
+      </div>
+      
+     <div className="flex space-x-12">
+  <button 
+    className="bg-yellow-400 hover:bg-yellow-300 text-blue-900 font-bold p-4 rounded-full transition duration-300 transform hover:scale-105 flex items-center justify-center mx-6"
+    onClick={startGame}
+    aria-label="לשחק שוב"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+    </svg>
+  </button>
+  
+  <button 
+    className="bg-blue-500 hover:bg-blue-400 text-white font-bold p-4 rounded-full transition duration-300 transform hover:scale-105 flex items-center justify-center mx-6"
+    onClick={handleShare}
+    aria-label="Share"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+    </svg>
+  </button>
 </div>
     </div>
   );
-  
+};
   // Main render based on game state
   return (
   <div 
